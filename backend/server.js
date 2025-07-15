@@ -8,7 +8,7 @@ const PORT = 3000;
 app.use(cors());
 app.use(express.static(path.join(__dirname, "public")));
 
-// 👇 ВАЖНО: этот маршрут должен идти первым!
+// 1. API endpoint
 app.get("/api/reviews", async (req, res) => {
   try {
     const mockReviews = [
@@ -16,8 +16,7 @@ app.get("/api/reviews", async (req, res) => {
         id: 1,
         product: "Entire Store",
         rating: 5,
-        review:
-          "Great shopping experience! The website is fast and easy to use.",
+        review: "Great shopping experience!",
         reviewerInfo: { name: "Anna K." },
         createDate: "2025-07-01",
       },
@@ -25,7 +24,7 @@ app.get("/api/reviews", async (req, res) => {
         id: 2,
         product: "Theta Store",
         rating: 4,
-        review: "Loved the design and smooth checkout. Would recommend!",
+        review: "Smooth checkout. Recommend!",
         reviewerInfo: { name: "James T." },
         createDate: "2025-07-05",
       },
@@ -33,20 +32,11 @@ app.get("/api/reviews", async (req, res) => {
         id: 3,
         product: "Customer Service",
         rating: 5,
-        review: "Support team helped me quickly. Very satisfied!",
+        review: "Support helped quickly.",
         reviewerInfo: { name: "Maria S." },
         createDate: "2025-07-08",
       },
-      {
-        id: 4,
-        product: "Customer Service",
-        rating: 5,
-        review: "Good store, thanks!",
-        reviewerInfo: { name: "John L." },
-        createDate: "2025-07-04",
-      },
     ];
-
     res.json(mockReviews);
   } catch (e) {
     console.error(e);
@@ -54,10 +44,15 @@ app.get("/api/reviews", async (req, res) => {
   }
 });
 
-app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "index.html"));
+// 2. Serve built Vue frontend
+const distPath = path.join(__dirname, "..", "frontend", "dist");
+app.use(express.static(distPath));
+
+// 3. Wildcard route for Vue SPA (fix!)
+app.get(/^\/(?!api).*/, (req, res) => {
+  res.sendFile(path.join(distPath, "index.html"));
 });
 
 app.listen(PORT, () => {
-  console.log(`Landing page running on http://localhost:${PORT}`);
+  console.log(`App running on http://localhost:${PORT}`);
 });
