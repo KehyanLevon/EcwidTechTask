@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Theta Store</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="landing.css" />
+    <link rel="stylesheet" href="ecwid.css" />
+
+    <script
+      data-cfasync="false"
+      type="text/javascript"
+      src="https://app.ecwid.com/script.js?101560752&data_platform=code&data_date=2025-07-15"
+      charset="utf-8"
+    ></script>
+  </head>
+
+  <body>
+    <header>
+      <div><strong>Theta Store</strong></div>
+      <nav>
+        <a href="#">Home</a>
+        <a href="#featured">Featured</a>
+        <a href="#categories">Categories</a>
+        <a href="#subscribe">Subscribe</a>
+      </nav>
+    </header>
+
+    <section class="hero">
+      <div>
+        <h1>Discover Your Perfect Style</h1>
+        <p>Premium clothing collections for the modern lifestyle.</p>
+        <div class="hero-buttons">
+          <a href="#featured">Shop Now</a>
+          <a href="#store">View Collection</a>
+        </div>
+      </div>
+      <div>
+        <img
+          src="https://assets.teenvogue.com/photos/65f49289b1c0767ee320ab9a/16:9/w_2580,c_limit/SXSW%202024.jpg"
+          alt="Hero Fashion Image"
+          class="fashion-img"
+        />
+      </div>
+    </section>
+
+    <section id="featured" class="featured">
+      <div id="my-store-101560752"></div>
+      <script type="text/javascript">
+        xProductBrowser("id=my-store-101560752");
+      </script>
+    </section>
+    <hr style="width: 90vw; border: none; border-top: 1px solid #ccc" />
+
+    <section id="reviews" class="reviews">
+      <h2>Customer Reviews</h2>
+      <div
+        id="reviews-container"
+        style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px"
+      ></div>
+    </section>
+
+    <section id="subscribe" class="subscribe">
+      <h2>Stay Updated</h2>
+      <p>Subscribe for updates on new arrivals and exclusive offers.</p>
+      <form>
+        <input type="email" placeholder="Your email" />
+        <button type="submit">Subscribe</button>
+      </form>
+    </section>
+
+    <footer>
+      <div class="footer-col">
+        <strong>Theta Store</strong><br />
+        Timeless Quality, Fit & Style.
+      </div>
+      <div class="footer-col">
+        <strong>Quick Links</strong><br />
+        Home<br />
+        Products<br />
+        About<br />
+        Contact
+      </div>
+      <div class="footer-col">
+        <strong>Customer Service</strong><br />
+        Shipping & Returns<br />
+        FAQs<br />
+        Order Status
+      </div>
+      <div class="footer-col">
+        <strong>Contact</strong><br />
+        📧 info@thetastore.com<br />
+        ☎️ +1 (555) 123-4567<br />
+        📍 77 Fashion Ave, NY
+      </div>
+    </footer>
+
+    <script>
+      fetch("/api/reviews")
+        .then((r) => r.json())
+        .then((items) => {
+          const container = document.getElementById("reviews-container");
+          container.innerHTML = items
+            .map(
+              (r) => `
+        <div class="review-card" style="border: 1px solid #ddd; padding: 1rem; border-radius: 6px;">
+          <strong>${r.product}</strong> — ${"⭐".repeat(r.rating)}<br/>
+          <p>${r.review}</p>
+          <em>— ${r.reviewerInfo.name}</em>
+        </div>
+      `
+            )
+            .join("");
+        })
+        .catch(console.error);
+    </script>
+  </body>
+</html>

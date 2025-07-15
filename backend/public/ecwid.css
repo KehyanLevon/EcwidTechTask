@@ -1,0 +1,8 @@
+.ec-footer,
+.ec-footer__icon,
+.ec-footer__link--all-products,
+.ec-footer__link--account,
+.ec-footer__link--cart,
+.ec-footer__link--track-orders {
+    display: none !important;
+}
