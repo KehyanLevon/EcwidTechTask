@@ -1,59 +1,77 @@
 <template>
-  <div>
-    <h2>Cart Page</h2>
-
-    <div id="ec-cart"></div>
-
-    <RecentlyUpdatedProducts />
+  <div class="cart-page">
+    <div id="ecwid-cart-container"></div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { onMounted } from "vue";
-import RecentlyUpdatedProducts from "../components/RecentlyUpdatedProducts.vue";
+
+declare global {
+  interface Window {
+    Ecwid?: {
+      OnAPILoaded: { add: (cb: () => void) => void };
+      openPage: (page: string) => void;
+    };
+  }
+}
 
 onMounted(() => {
-  if (!document.getElementById("ecwid-script")) {
-    const script = document.createElement("script");
-    script.id = "ecwid-script";
-    script.src =
-      "https://app.ecwid.com/script.js?101560752&data_platform=code&data_date=2023-07-12";
-    script.async = true;
-    script.charset = "utf-8";
-    document.body.appendChild(script);
+  const storeId = "101560752";
+  const container = document.getElementById("ecwid-cart-container");
+  if (!container) return;
 
-    script.onload = () => {
-      renderEcwidCart();
+  container.innerHTML = "";
+
+  const stripPopupStyles = () => {
+    const overlay = document.querySelector(
+      ".ecwid-overlay"
+    ) as HTMLElement | null;
+    if (overlay) {
+      overlay.removeAttribute("style");
+      overlay.className = "";
+    }
+
+    const popup = document.querySelector(
+      ".ecwid-popup.ecwid-ProductBrowserPopup"
+    ) as HTMLElement | null;
+    if (popup) {
+      popup.removeAttribute("style");
+      popup.className = "";
+    }
+
+    const popupCloseButton = document.querySelector(
+      ".ecwid-popup-closeButton"
+    ) as HTMLElement | null;
+    popupCloseButton?.remove();
+  };
+
+  const loadAndInit = () => {
+    const s = document.createElement("script");
+    s.src = `https://app.ecwid.com/script.js?${storeId}&data_platform=code&data_date=${new Date()
+      .toISOString()
+      .slice(0, 10)}`;
+    s.async = true;
+    s.onload = () => {
+      window.Ecwid?.OnAPILoaded.add(() => {
+        window.Ecwid?.openPage("cart");
+        setTimeout(stripPopupStyles, 150);
+      });
     };
+    document.body.appendChild(s);
+  };
+
+  if (window.Ecwid && window.Ecwid.openPage) {
+    window.Ecwid.openPage("cart");
+    setTimeout(stripPopupStyles, 150);
   } else {
-    renderEcwidCart();
-  }
-
-  function renderEcwidCart() {
-    // Глобально настроим Ecwid на отображение только корзины
-    (window as any).Ecwid = (window as any).Ecwid || {};
-    (window as any).Ecwid.storefront = {
-      settings: {
-        productBrowserURL: "/store.html",
-        // Отображать только корзину
-        productBrowserLayout: "CART",
-        show_breadcrumbs: false,
-        show_navigation: false,
-      },
-    };
-
-    // Отрисовать корзину в конкретный div
-    const container = document.getElementById("ec-cart");
-    if (container) {
-      container.innerHTML = `<div itemscope itemtype="http://schema.org/Organization" class="ec-cart-widget">
-        <div id="my-store-101560752"></div>
-      </div>`;
-    }
-
-    // Принудительно переинициализировать
-    if ((window as any).Ecwid?.init) {
-      (window as any).Ecwid.init();
-    }
+    loadAndInit();
   }
 });
 </script>
+
+<style scoped>
+.cart-page {
+  padding: 2rem;
+}
+</style>
