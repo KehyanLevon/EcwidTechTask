@@ -1,29 +1,6 @@
 <template>
   <div class="cart-page">
     <div id="ecwid-cart-container"></div>
-
-    <div class="recent-products-widget">
-      <h2>Recently Updated Products</h2>
-
-      <label>
-        Show last
-        <select v-model="limit">
-          <option v-for="n in [3, 5, 8, 10]" :key="n" :value="n">
-            {{ n }}
-          </option>
-        </select>
-        products
-      </label>
-
-      <div class="product-grid">
-        <div v-for="p in products" :key="p.id" class="product-card">
-          <img :src="p.imageUrl" :alt="p.name" @click="openProduct(p.id)" />
-          <h3 @click="openProduct(p.id)">{{ p.name }}</h3>
-          <p>{{ p.price }}</p>
-          <button @click="addToCart(p.id)">Buy now</button>
-        </div>
-      </div>
-    </div>
   </div>
 </template>
 
@@ -116,21 +93,97 @@ const initEcwid = () => {
   document.body.appendChild(s);
 };
 
+const injectWidgetRow = () => {
+  const interval = setInterval(() => {
+    const tbody = document.querySelector(".ecwid-popup-touchLimiter tbody");
+    if (!tbody) return;
+
+    // не вставляем повторно
+    if (document.getElementById("recent-products-wrapper")) {
+      clearInterval(interval);
+      return;
+    }
+
+    const tr = document.createElement("tr");
+    tr.id = "recent-products-wrapper";
+    tr.innerHTML = `
+      <td colspan="100%">
+        <div class="recent-products-widget">
+          <h2>Recently Updated Products</h2>
+          <label>
+            Show last
+            <select id="recent-limit">
+              ${[3, 5, 8, 10]
+                .map((n) => `<option value="${n}">${n}</option>`)
+                .join("")}
+            </select>
+            products
+          </label>
+          <div id="recent-product-grid" class="product-grid" style="margin-top: 1rem;"></div>
+        </div>
+      </td>
+    `;
+
+    tbody.appendChild(tr);
+    clearInterval(interval);
+
+    // добавить обработчик выбора количества
+    const select = tr.querySelector("#recent-limit") as HTMLSelectElement;
+    select.value = limit.value.toString();
+    select.addEventListener("change", () => {
+      limit.value = parseInt(select.value);
+    });
+
+    renderProductCards();
+  }, 200);
+};
+
+const renderProductCards = () => {
+  const grid = document.getElementById("recent-product-grid");
+  if (!grid) return;
+
+  grid.innerHTML = products.value
+    .map(
+      (p) => `
+    <div class="product-card">
+      <img src="${p.imageUrl}" alt="${p.name}" />
+      <h3>${p.name}</h3>
+      <p>${p.price}</p>
+      <button data-id="${p.id}">Buy now</button>
+    </div>
+  `
+    )
+    .join("");
+
+  grid.querySelectorAll("img, h3").forEach((el, i) => {
+    el.addEventListener("click", () => openProduct(products.value[i].id));
+  });
+
+  grid.querySelectorAll("button").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const id = parseInt((btn as HTMLElement).dataset.id!);
+      addToCart(id);
+    });
+  });
+};
+
 onMounted(() => {
-  if (window.Ecwid && window.Ecwid.openPage) {
-    window.Ecwid.openPage("cart");
-    setTimeout(stripPopupStyles, 150);
-  } else {
-    initEcwid();
-  }
+  setTimeout(() => {
+    stripPopupStyles();
+    injectWidgetRow();
+  }, 200);
+  initEcwid();
 
   fetchProducts();
 });
 
-watch(limit, fetchProducts);
+watch(limit, async () => {
+  await fetchProducts();
+  renderProductCards();
+});
 </script>
 
-<style scoped>
+<style>
 .cart-page {
   padding: 2rem;
 }
