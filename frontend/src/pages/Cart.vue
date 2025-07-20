@@ -1,7 +1,9 @@
 <template>
+  <div id="tempMainPart"></div>
   <div class="cart-page">
     <div id="ecwid-cart-container"></div>
   </div>
+  <div id="recently-updated-products-widget"></div>
 </template>
 
 <script setup lang="ts">
@@ -14,6 +16,9 @@ declare global {
       openPage: (page: string) => void;
       Cart?: {
         addProduct: (id: number) => void;
+      };
+      ProductBrowserPopup?: {
+        show: (options: { productId: number }) => void;
       };
     };
   }
@@ -44,34 +49,21 @@ const fetchProducts = async () => {
 };
 
 const openProduct = (id: number) => {
-  window.Ecwid?.openPage?.(`product/${id}`);
+  window.Ecwid?.ProductBrowserPopup?.show({ productId: id });
 };
-
 const addToCart = (id: number) => {
   window.Ecwid?.Cart?.addProduct(id);
 };
-
-const stripPopupStyles = () => {
-  const overlay = document.querySelector(
-    ".ecwid-overlay"
+const moveEcWrapperToTempMainPart = () => {
+  const ecWrapper = document.querySelector(
+    ".ecwid-popup-content"
   ) as HTMLElement | null;
-  if (overlay) {
-    overlay.removeAttribute("style");
-    overlay.className = "";
+
+  const tempMainPart = document.getElementById("tempMainPart");
+
+  if (ecWrapper && tempMainPart) {
+    tempMainPart.appendChild(ecWrapper);
   }
-
-  const popup = document.querySelector(
-    ".ecwid-popup.ecwid-ProductBrowserPopup"
-  ) as HTMLElement | null;
-  if (popup) {
-    popup.removeAttribute("style");
-    popup.className = "";
-  }
-
-  const popupCloseButton = document.querySelector(
-    ".ecwid-popup-closeButton"
-  ) as HTMLElement | null;
-  popupCloseButton?.remove();
 };
 
 const initEcwid = () => {
@@ -87,26 +79,28 @@ const initEcwid = () => {
   s.onload = () => {
     window.Ecwid?.OnAPILoaded.add(() => {
       window.Ecwid?.openPage("cart");
-      setTimeout(stripPopupStyles, 150);
+      moveEcWrapperToTempMainPart();
     });
   };
+  s.id = "initEcwidScript";
+
   document.body.appendChild(s);
 };
 
 const injectWidgetRow = () => {
   const interval = setInterval(() => {
-    const tbody = document.querySelector(".ecwid-popup-touchLimiter tbody");
-    if (!tbody) return;
-
-    // не вставляем повторно
+    const recentlyUpdatedProductsWidget = document.querySelector(
+      "#recently-updated-products-widget"
+    );
+    if (!recentlyUpdatedProductsWidget) return;
     if (document.getElementById("recent-products-wrapper")) {
       clearInterval(interval);
       return;
     }
 
-    const tr = document.createElement("tr");
-    tr.id = "recent-products-wrapper";
-    tr.innerHTML = `
+    const widget = document.createElement("div");
+    widget.id = "recent-products-wrapper";
+    widget.innerHTML = `
       <td colspan="100%">
         <div class="recent-products-widget">
           <h2>Recently Updated Products</h2>
@@ -124,11 +118,10 @@ const injectWidgetRow = () => {
       </td>
     `;
 
-    tbody.appendChild(tr);
+    recentlyUpdatedProductsWidget.appendChild(widget);
     clearInterval(interval);
 
-    // добавить обработчик выбора количества
-    const select = tr.querySelector("#recent-limit") as HTMLSelectElement;
+    const select = widget.querySelector("#recent-limit") as HTMLSelectElement;
     select.value = limit.value.toString();
     select.addEventListener("change", () => {
       limit.value = parseInt(select.value);
@@ -146,8 +139,8 @@ const renderProductCards = () => {
     .map(
       (p) => `
     <div class="product-card">
-      <img src="${p.imageUrl}" alt="${p.name}" />
-      <h3>${p.name}</h3>
+      <img src="${p.imageUrl}" alt="${p.name}" data-id="${p.id}" class="product-link" />
+      <h3 class="product-link" data-id="${p.id}">${p.name}</h3>
       <p>${p.price}</p>
       <button data-id="${p.id}">Buy now</button>
     </div>
@@ -155,24 +148,27 @@ const renderProductCards = () => {
     )
     .join("");
 
-  grid.querySelectorAll("img, h3").forEach((el, i) => {
-    el.addEventListener("click", () => openProduct(products.value[i].id));
+  grid.querySelectorAll(".product-link").forEach((el) => {
+    el.addEventListener("click", () => {
+      const id = (el as HTMLElement).dataset.id;
+      if (id) openProduct(Number(id));
+    });
   });
 
   grid.querySelectorAll("button").forEach((btn) => {
     btn.addEventListener("click", () => {
-      const id = parseInt((btn as HTMLElement).dataset.id!);
-      addToCart(id);
+      const id = (btn as HTMLElement).dataset.id;
+      if (id) addToCart(Number(id));
     });
   });
 };
 
 onMounted(() => {
-  setTimeout(() => {
-    stripPopupStyles();
-    injectWidgetRow();
-  }, 200);
   initEcwid();
+  setTimeout(() => {
+    // setTimeout(() => moveEcWrapperToTempMainPart(), 500);
+    injectWidgetRow();
+  }, 500);
 
   fetchProducts();
 });
@@ -189,9 +185,9 @@ watch(limit, async () => {
 }
 
 .recent-products-widget {
-  margin-top: 3rem;
   border-top: 1px solid #ccc;
   padding-top: 2rem;
+  padding: 3rem;
 }
 
 .recent-products-widget select {
@@ -241,5 +237,13 @@ watch(limit, async () => {
 
 .product-card button:hover {
   background-color: #005ec4;
+}
+
+.ec-cart__button {
+  display: none !important;
+}
+
+.cart-page {
+  display: none;
 }
 </style>
