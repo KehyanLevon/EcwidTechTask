@@ -1,5 +1,5 @@
 <template>
-  <div id="tempMainPart"></div>
+  <div id="cart"></div>
   <div class="cart-page">
     <div id="ecwid-cart-container"></div>
   </div>
@@ -9,24 +9,10 @@
 <script setup lang="ts">
 import { ref, onMounted, watch } from "vue";
 
-declare global {
-  interface Window {
-    Ecwid?: {
-      OnAPILoaded: { add: (cb: () => void) => void };
-      openPage: (page: string) => void;
-      Cart?: {
-        addProduct: (id: number) => void;
-      };
-      ProductBrowserPopup?: {
-        show: (options: { productId: number }) => void;
-      };
-    };
-  }
-}
-
 const storeId = "101560752";
 const limit = ref(5);
 const products = ref<any[]>([]);
+let ecwidScript: HTMLScriptElement | null = null;
 
 const fetchProducts = async () => {
   const res = await fetch(
@@ -48,21 +34,18 @@ const fetchProducts = async () => {
   }));
 };
 
-const openProduct = (id: number) => {
-  window.Ecwid?.ProductBrowserPopup?.show({ productId: id });
-};
 const addToCart = (id: number) => {
   window.Ecwid?.Cart?.addProduct(id);
 };
-const moveEcWrapperToTempMainPart = () => {
+const moveEcWrapperToCart = () => {
   const ecWrapper = document.querySelector(
     ".ecwid-popup-content"
   ) as HTMLElement | null;
 
-  const tempMainPart = document.getElementById("tempMainPart");
+  const cart = document.getElementById("cart");
 
-  if (ecWrapper && tempMainPart) {
-    tempMainPart.appendChild(ecWrapper);
+  if (ecWrapper && cart) {
+    cart.appendChild(ecWrapper);
   }
 };
 
@@ -71,20 +54,21 @@ const initEcwid = () => {
   if (!container) return;
   container.innerHTML = "";
 
-  const s = document.createElement("script");
-  s.src = `https://app.ecwid.com/script.js?${storeId}&data_platform=code&data_date=${new Date()
+  ecwidScript = document.createElement("script");
+  ecwidScript.src = `https://app.ecwid.com/script.js?${storeId}&data_platform=code&data_date=${new Date()
     .toISOString()
     .slice(0, 10)}`;
-  s.async = true;
-  s.onload = () => {
+  ecwidScript.async = true;
+  ecwidScript.id = "initEcwidScript";
+
+  ecwidScript.onload = () => {
     window.Ecwid?.OnAPILoaded.add(() => {
       window.Ecwid?.openPage("cart");
-      moveEcWrapperToTempMainPart();
+      moveEcWrapperToCart();
     });
   };
-  s.id = "initEcwidScript";
 
-  document.body.appendChild(s);
+  document.body.appendChild(ecwidScript);
 };
 
 const injectWidgetRow = () => {
@@ -101,21 +85,19 @@ const injectWidgetRow = () => {
     const widget = document.createElement("div");
     widget.id = "recent-products-wrapper";
     widget.innerHTML = `
-      <td colspan="100%">
-        <div class="recent-products-widget">
-          <h2>Recently Updated Products</h2>
-          <label>
-            Show last
-            <select id="recent-limit">
-              ${[3, 5, 8, 10]
-                .map((n) => `<option value="${n}">${n}</option>`)
-                .join("")}
-            </select>
-            products
-          </label>
-          <div id="recent-product-grid" class="product-grid" style="margin-top: 1rem;"></div>
-        </div>
-      </td>
+      <div class="recent-products-widget">
+        <h2>Recently Updated Products</h2>
+        <label>
+          Show last
+          <select id="recent-limit">
+            ${[3, 5, 8, 10]
+              .map((n) => `<option value="${n}">${n}</option>`)
+              .join("")}
+          </select>
+          products
+        </label>
+        <div id="recent-product-grid" class="product-grid" style="margin-top: 1rem;"></div>
+      </div>
     `;
 
     recentlyUpdatedProductsWidget.appendChild(widget);
@@ -134,26 +116,24 @@ const injectWidgetRow = () => {
 const renderProductCards = () => {
   const grid = document.getElementById("recent-product-grid");
   if (!grid) return;
-
   grid.innerHTML = products.value
-    .map(
-      (p) => `
-    <div class="product-card">
-      <img src="${p.imageUrl}" alt="${p.name}" data-id="${p.id}" class="product-link" />
-      <h3 class="product-link" data-id="${p.id}">${p.name}</h3>
-      <p>${p.price}</p>
-      <button data-id="${p.id}">Buy now</button>
-    </div>
-  `
-    )
+    .map((p) => {
+      const cleanName = encodeURIComponent(p.name.replace(/\s+/g, "-"));
+      const href = `/product/${p.id}#!/${cleanName}/p/${p.id}`;
+      return `
+      <div class="product-card">
+        <a href="${href}">
+          <img src="${p.imageUrl}" alt="${p.name}" data-id="${p.id}" class="product-link" />
+        </a>
+        <a href="${href}">
+          <h3 class="product-link" data-id="${p.id}">${p.name}</h3>
+        </a>
+        <p>${p.price}</p>
+        <button data-id="${p.id}">Buy now</button>
+      </div>
+    `;
+    })
     .join("");
-
-  grid.querySelectorAll(".product-link").forEach((el) => {
-    el.addEventListener("click", () => {
-      const id = (el as HTMLElement).dataset.id;
-      if (id) openProduct(Number(id));
-    });
-  });
 
   grid.querySelectorAll("button").forEach((btn) => {
     btn.addEventListener("click", () => {
@@ -165,10 +145,7 @@ const renderProductCards = () => {
 
 onMounted(() => {
   initEcwid();
-  setTimeout(() => {
-    // setTimeout(() => moveEcWrapperToTempMainPart(), 500);
-    injectWidgetRow();
-  }, 500);
+  setTimeout(() => injectWidgetRow(), 400);
 
   fetchProducts();
 });
