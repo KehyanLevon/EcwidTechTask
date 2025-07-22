@@ -10,7 +10,11 @@
 import { ref, onMounted, watch } from "vue";
 
 const storeId = "101560752";
-const limit = ref(5);
+const defaultLimit = parseInt(
+  localStorage.getItem("ecwid-recently-widget-default-count") || "5"
+);
+const limit = ref(defaultLimit);
+
 const products = ref<any[]>([]);
 let ecwidScript: HTMLScriptElement | null = null;
 
@@ -49,6 +53,30 @@ const moveEcWrapperToCart = () => {
   }
 };
 
+const backToCart = () => {
+  window.Ecwid?.OnPageLoaded.add((page) => {
+    if (page.type === "ORDER_CONFIRMATION") {
+      const interval = setInterval(() => {
+        const btn = document.querySelector(
+          ".ec-confirmation__continue .form-control__button"
+        ) as HTMLElement | null;
+
+        if (btn) {
+          const span = btn.querySelector("span");
+          if (span) span.textContent = "Back to cart";
+
+          btn.addEventListener("click", (e) => {
+            e.preventDefault();
+            window.Ecwid?.openPage("cart");
+          });
+
+          clearInterval(interval);
+        }
+      }, 200);
+    }
+  });
+};
+
 const initEcwid = () => {
   const container = document.getElementById("ecwid-cart-container");
   if (!container) return;
@@ -65,6 +93,7 @@ const initEcwid = () => {
     window.Ecwid?.OnAPILoaded.add(() => {
       window.Ecwid?.openPage("cart");
       moveEcWrapperToCart();
+      backToCart();
     });
   };
 
@@ -129,7 +158,7 @@ const renderProductCards = () => {
           <h3 class="product-link" data-id="${p.id}">${p.name}</h3>
         </a>
         <p>${p.price}</p>
-        <button data-id="${p.id}">Buy now</button>
+        <button data-id="${p.id}" id="buy-now">Buy now</button>
       </div>
     `;
     })
@@ -145,9 +174,13 @@ const renderProductCards = () => {
 
 onMounted(() => {
   initEcwid();
-  setTimeout(() => injectWidgetRow(), 400);
 
-  fetchProducts();
+  const isWidgetEnabled =
+    localStorage.getItem("ecwid-recently-widget-enabled") !== "false";
+  if (isWidgetEnabled) {
+    setTimeout(() => injectWidgetRow(), 600);
+    fetchProducts();
+  }
 });
 
 watch(limit, async () => {
@@ -155,72 +188,3 @@ watch(limit, async () => {
   renderProductCards();
 });
 </script>
-
-<style>
-.cart-page {
-  padding: 2rem;
-}
-
-.recent-products-widget {
-  border-top: 1px solid #ccc;
-  padding-top: 2rem;
-  padding: 3rem;
-}
-
-.recent-products-widget select {
-  margin: 0 0.5rem;
-  padding: 0.25rem;
-}
-
-.product-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  gap: 1rem;
-  margin-top: 1rem;
-}
-
-.product-card {
-  border: 1px solid #ddd;
-  padding: 1rem;
-  text-align: center;
-  border-radius: 8px;
-  transition: box-shadow 0.2s ease;
-}
-
-.product-card:hover {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.product-card img {
-  max-width: 100%;
-  height: auto;
-  cursor: pointer;
-  margin-bottom: 0.5rem;
-}
-
-.product-card h3 {
-  cursor: pointer;
-  margin: 0.5rem 0;
-}
-
-.product-card button {
-  background-color: #007aff;
-  color: white;
-  padding: 0.5rem 1rem;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.product-card button:hover {
-  background-color: #005ec4;
-}
-
-.ec-cart__button {
-  display: none !important;
-}
-
-.cart-page {
-  display: none;
-}
-</style>

@@ -20,7 +20,7 @@ function initEcwid(id: string) {
     window.Ecwid?.OnAPILoaded.add(() => {
       window.Ecwid?.openPage("product", { id: Number(id) });
       moveEcWrapperToProductDetail();
-      setTimeout(() => refactorEcwidComponent(), 100);
+      setTimeout(() => refactorEcwidComponent(), 200);
     });
   };
   document.body.appendChild(ecwidScript);

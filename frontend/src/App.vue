@@ -10,6 +10,7 @@ declare global {
   interface Window {
     Ecwid?: {
       OnAPILoaded: { add: (cb: () => void) => void };
+      OnPageLoaded: { add: (cb: (page: { type: string }) => void) => void };
       openPage: (page: string, options?: any) => void;
       Cart?: {
         addProduct: (id: number) => void;
@@ -23,5 +24,6 @@ declare global {
     ecwid_dynamic_widgets: boolean;
   }
 }
+
 import AppHeader from "./components/AppHeader.vue";
 </script>
