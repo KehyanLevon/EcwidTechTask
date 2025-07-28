@@ -3,8 +3,6 @@
     <div><strong>Theta Store</strong></div>
     <nav>
       <a href="/">Home</a>
-      <!-- <RouterLink to="/cart#!/~/cart">Cart</RouterLink>
-      <RouterLink to="/settings">Settings</RouterLink> -->
       <a href="/cart#!/~/cart">Cart</a>
       <a href="/settings">Settings</a>
     </nav>
