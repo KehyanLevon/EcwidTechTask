@@ -130,8 +130,8 @@
 import { ref, onMounted, watch } from "vue";
 import { utils, writeFile } from "xlsx";
 
-const storeId = "101560752";
-const token = "public_ie55a1cQU472c1GBmeBqAVpL1ks3LFpu";
+const storeId = import.meta.env.VITE_ECWID_STORE_ID;
+const token = import.meta.env.VITE_ECWID_PUBLIC_KEY;
 
 const ENABLE_KEY = "ecwid-recently-widget-enabled";
 const DEFAULT_COUNT_KEY = "ecwid-recently-widget-default-count";

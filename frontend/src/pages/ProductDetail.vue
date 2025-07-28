@@ -5,7 +5,7 @@
 <script setup lang="ts">
 import { onMounted } from "vue";
 
-const storeId = "101560752";
+const storeId = import.meta.env.VITE_ECWID_STORE_ID;
 let ecwidScript: HTMLScriptElement | null = null;
 
 function initEcwid(id: string) {

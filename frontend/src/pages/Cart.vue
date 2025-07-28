@@ -9,7 +9,7 @@
 <script setup lang="ts">
 import { ref, onMounted, watch } from "vue";
 
-const storeId = "101560752";
+const storeId = import.meta.env.VITE_ECWID_STORE_ID;
 const defaultLimit = parseInt(
   localStorage.getItem("ecwid-recently-widget-default-count") || "5"
 );
@@ -23,7 +23,7 @@ const fetchProducts = async () => {
     `https://app.ecwid.com/api/v3/${storeId}/products?sortBy=UPDATED_TIME_DESC&limit=${limit.value}`,
     {
       headers: {
-        Authorization: "Bearer public_ie55a1cQU472c1GBmeBqAVpL1ks3LFpu",
+        Authorization: `Bearer ${import.meta.env.VITE_ECWID_PUBLIC_KEY}`,
       },
     }
   );
