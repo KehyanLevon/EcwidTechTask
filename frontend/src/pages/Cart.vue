@@ -40,7 +40,41 @@ const fetchProducts = async () => {
 
 const addToCart = (id: number) => {
   window.Ecwid?.Cart?.addProduct(id);
+
+  const key = "recentlyUpdatedProducts";
+  const current = JSON.parse(localStorage.getItem(key) || "[]");
+
+  if (!current.includes(id)) {
+    current.push(id);
+    localStorage.setItem(key, JSON.stringify(current));
+  }
+
+  window.Ecwid?.OnAPILoaded.add(() => {
+    window.Ecwid?.OnPageLoaded.add((page: any) => {
+      if (page.type === "CART" || page.type === "CHECKOUT") {
+        window.ec = window.ec || {};
+        window.ec.order = window.ec.order || {};
+        window.ec.order.extraFields = window.ec.order.extraFields || {};
+
+        const key = "recentlyUpdatedProducts";
+        const value = localStorage.getItem(key) || "";
+
+        window.ec.order.extraFields[key] = {
+          title: "Recently updated products",
+          type: "text",
+          value,
+          orderDetailsDisplaySection: "shipping_info",
+          showInNotifications: false,
+          showInInvoice: false,
+          required: false,
+        };
+
+        window.Ecwid?.refreshConfig();
+      }
+    });
+  });
 };
+
 const moveEcWrapperToCart = () => {
   const ecWrapper = document.querySelector(
     ".ecwid-popup-content"
