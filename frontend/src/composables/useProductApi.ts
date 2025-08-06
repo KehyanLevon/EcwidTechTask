@@ -4,7 +4,7 @@ export function useProductApi() {
   const products = ref<any[]>([]);
 
   const fetchProducts = async (limit = 5) => {
-    try {
+    try {      
       const res = await fetch(
         `https://app.ecwid.com/api/v3/${
           import.meta.env.VITE_ECWID_STORE_ID

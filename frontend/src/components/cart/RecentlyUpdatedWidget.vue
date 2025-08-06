@@ -13,46 +13,37 @@ const { products, fetchProducts } = useProductApi();
 const { addToCart } = useCartUtils();
 
 const injectWidgetRow = () => {
-  const interval = setInterval(() => {
-    const footer = document.querySelector(".ec-footer");
+  const footer = document.querySelector(".ec-footer");
+  if (!footer || document.getElementById("recent-products-wrapper")) return;
 
-    if (!footer) return;
+  const wrapper = document.createElement("div");
+  wrapper.id = "recent-products-wrapper";
 
-    if (document.getElementById("recent-products-wrapper")) {
-      clearInterval(interval);
-      return;
-    }
+  wrapper.innerHTML = `
+    <div class="recent-products-widget">
+      <h2 class="ec-text-medium">Recently Updated Products</h2>
+      <label class="ec-text">
+        Show last
+        <select id="recent-limit" class="ec-select">
+          ${[3, 5, 8, 10]
+            .map((n) => `<option value="${n}">${n}</option>`)
+            .join("")}
+        </select>
+        products
+      </label>
+      <div id="recent-product-grid" class="product-grid" style="margin-top: 1rem;"></div>
+    </div>
+  `;
 
-    const wrapper = document.createElement("div");
-    wrapper.id = "recent-products-wrapper";
+  footer.parentElement?.insertBefore(wrapper, footer);
 
-    wrapper.innerHTML = `
-        <div class="recent-products-widget">
-        <h2 class="ec-text-medium">Recently Updated Products</h2>
-        <label class="ec-text">
-          Show last
-          <select id="recent-limit" class="ec-select">
-            ${[3, 5, 8, 10]
-              .map((n) => `<option value="${n}">${n}</option>`)
-              .join("")}
-          </select>
-          products
-        </label>
-        <div id="recent-product-grid" class="product-grid" style="margin-top: 1rem;"></div>
-      </div>
-    `;
-    footer.parentElement?.insertBefore(wrapper, footer);
+  const select = wrapper.querySelector("#recent-limit") as HTMLSelectElement;
+  select.value = limit.value.toString();
+  select.addEventListener("change", () => {
+    limit.value = parseInt(select.value);
+  });
 
-    clearInterval(interval);
-
-    const select = wrapper.querySelector("#recent-limit") as HTMLSelectElement;
-    select.value = limit.value.toString();
-    select.addEventListener("change", () => {
-      limit.value = parseInt(select.value);
-    });
-
-    renderProductCards();
-  }, 200);
+  renderProductCards();
 };
 
 const renderProductCards = () => {
@@ -61,15 +52,13 @@ const renderProductCards = () => {
 
   grid.innerHTML = products.value
     .map((p) => {
-      const cleanName = encodeURIComponent(p.name.replace(/\s+/g, "-"));
-      const href = `/product/${p.id}#!/${cleanName}/p/${p.id}`;
       return `
         <div class="product-card">
-          <a href="${href}">
-            <img src="${p.imageUrl}" alt="${p.name}" data-id="${p.id}" class="product-link" />
+          <a href="#" data-id="${p.id}" class="product-link">
+            <img src="${p.imageUrl}" alt="${p.name}" class="product-link" />
           </a>
-          <a href="${href}">
-            <h3 class="product-link" data-id="${p.id}">${p.name}</h3>
+          <a href="#" data-id="${p.id}" class="product-link">
+            <h3 class="product-link">${p.name}</h3>
           </a>
           <p>${p.price}</p>
           <button data-id="${p.id}" id="buy-now">Buy now</button>
@@ -77,6 +66,16 @@ const renderProductCards = () => {
       `;
     })
     .join("");
+
+  grid.querySelectorAll(".product-link").forEach((el) => {
+    el.addEventListener("click", (e) => {
+      e.preventDefault();
+      const id = (el as HTMLElement).dataset.id;
+      if (id) {
+        window.Ecwid?.openPage("product", { id: Number(id) });
+      }
+    });
+  });
 
   grid.querySelectorAll("button").forEach((btn) => {
     btn.addEventListener("click", () => {
@@ -89,11 +88,22 @@ const renderProductCards = () => {
 onMounted(() => {
   const isWidgetEnabled =
     localStorage.getItem("ecwid-recently-widget-enabled") !== "false";
-  if (isWidgetEnabled) {
-    setTimeout(() => injectWidgetRow(), 600);
-    fetchProducts(limit.value);
-  }
+  if (!isWidgetEnabled) return;
+
+  const interval = setInterval(() => {
+    if (window.Ecwid?.OnPageLoaded) {
+      clearInterval(interval);
+      window.Ecwid.OnPageLoaded.add((page) => {
+        if (page.type === "CART") {
+          fetchProducts(limit.value).then(() => {
+            injectWidgetRow();
+          });
+        }
+      });
+    }
+  }, 200);
 });
+
 
 watch(limit, async () => {
   await fetchProducts(limit.value);
