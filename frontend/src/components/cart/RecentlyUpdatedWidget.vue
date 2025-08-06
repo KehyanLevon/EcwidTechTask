@@ -10,7 +10,7 @@ const defaultLimit = parseInt(
 );
 const limit = ref(defaultLimit);
 const { products, fetchProducts } = useProductApi();
-const { addToCart } = useCartUtils();
+const { addToCart, addExtraFields } = useCartUtils();
 
 const injectWidgetRow = () => {
   const footer = document.querySelector(".ec-footer");
@@ -94,10 +94,13 @@ onMounted(() => {
     if (window.Ecwid?.OnPageLoaded) {
       clearInterval(interval);
       window.Ecwid.OnPageLoaded.add((page) => {
-        if (page.type === "CART") {
-          fetchProducts(limit.value).then(() => {
-            injectWidgetRow();
-          });
+        if (page.type === "CART" || page.type === "CHECKOUT") {
+          addExtraFields()
+          if (page.type === "CART") {
+            fetchProducts(limit.value).then(() => {
+              injectWidgetRow();
+            });
+          }
         }
       });
     }

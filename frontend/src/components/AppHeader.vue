@@ -3,7 +3,7 @@
     <div><strong>Theta Store</strong></div>
     <nav>
       <a href="/">Home</a>
-      <a href="/cart#!/~/cart">Cart</a>
+      <a href="/store">Store</a>
       <a href="/settings">Settings</a>
     </nav>
   </header>
