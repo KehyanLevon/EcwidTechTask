@@ -1,46 +1,26 @@
 <template>
-  <div id="cart"></div>
-  <div id="ecwid-cart-container"></div>
+  <div id="my-store-101560752" style="padding-top: 2rem;"></div>
 </template>
 
 <script setup lang="ts">
 import { onMounted } from "vue";
-import { injectEcwidScript } from "../../utils/ecwidScript";
-
-const moveEcWrapperToCart = () => {
-  const ecWrapper = document.querySelector(
-    ".ecwid-popup-content"
-  ) as HTMLElement | null;
-  const cart = document.getElementById("cart");
-  if (ecWrapper && cart) cart.appendChild(ecWrapper);
-};
-
-const backToCart = () => {
-  window.Ecwid?.OnPageLoaded.add((page) => {
-    if (page.type === "ORDER_CONFIRMATION") {
-      const interval = setInterval(() => {
-        const btn = document.querySelector(
-          ".ec-confirmation__continue .form-control__button"
-        ) as HTMLElement | null;
-        if (btn) {
-          const span = btn.querySelector("span");
-          if (span) span.textContent = "Back to cart";
-          btn.addEventListener("click", (e) => {
-            e.preventDefault();
-            window.Ecwid?.openPage("cart");
-          });
-          clearInterval(interval);
-        }
-      }, 200);
-    }
-  });
-};
 
 onMounted(() => {
-  injectEcwidScript("cart", () => {
-    window.Ecwid?.openPage("cart");
-    moveEcWrapperToCart();
-    backToCart();
-  });
+  const script = document.createElement("script");
+  script.src =
+    "https://app.ecwid.com/script.js?101560752&data_platform=code&data_date=2025-08-06";
+  script.async = true;
+  document.body.appendChild(script);
+
+  script.onload = () => {
+    // storefront-режим вместо popup
+    window.xProductBrowser?.(
+      "categoriesPerRow=3",
+      "views=grid(20,3) list(60) table(60)",
+      "categoryView=grid",
+      "searchView=list",
+      "id=my-store-101560752"
+    );
+  };
 });
 </script>

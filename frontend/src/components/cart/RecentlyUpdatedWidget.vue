@@ -1,6 +1,4 @@
-<template>
-  <div id="recently-updated-products-widget"></div>
-</template>
+<template></template>
 
 <script setup lang="ts">
 import { ref, onMounted, watch } from "vue";
@@ -16,23 +14,24 @@ const { addToCart } = useCartUtils();
 
 const injectWidgetRow = () => {
   const interval = setInterval(() => {
-    const container = document.querySelector(
-      "#recently-updated-products-widget"
-    );
-    if (!container) return;
+    const footer = document.querySelector(".ec-footer");
+
+    if (!footer) return;
+
     if (document.getElementById("recent-products-wrapper")) {
       clearInterval(interval);
       return;
     }
 
-    const widget = document.createElement("div");
-    widget.id = "recent-products-wrapper";
-    widget.innerHTML = `
-      <div class="recent-products-widget">
-        <h2>Recently Updated Products</h2>
-        <label>
+    const wrapper = document.createElement("div");
+    wrapper.id = "recent-products-wrapper";
+
+    wrapper.innerHTML = `
+        <div class="recent-products-widget">
+        <h2 class="ec-text-medium">Recently Updated Products</h2>
+        <label class="ec-text">
           Show last
-          <select id="recent-limit">
+          <select id="recent-limit" class="ec-select">
             ${[3, 5, 8, 10]
               .map((n) => `<option value="${n}">${n}</option>`)
               .join("")}
@@ -42,11 +41,11 @@ const injectWidgetRow = () => {
         <div id="recent-product-grid" class="product-grid" style="margin-top: 1rem;"></div>
       </div>
     `;
+    footer.parentElement?.insertBefore(wrapper, footer);
 
-    container.appendChild(widget);
     clearInterval(interval);
 
-    const select = widget.querySelector("#recent-limit") as HTMLSelectElement;
+    const select = wrapper.querySelector("#recent-limit") as HTMLSelectElement;
     select.value = limit.value.toString();
     select.addEventListener("change", () => {
       limit.value = parseInt(select.value);
