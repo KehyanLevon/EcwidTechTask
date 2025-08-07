@@ -4,40 +4,37 @@
 import { ref, onMounted, watch } from "vue";
 import { useProductApi } from "../../composables/useProductApi";
 import { useCartUtils } from "../../composables/useCartUtils";
-
 const defaultLimit = parseInt(
   localStorage.getItem("ecwid-recently-widget-default-count") || "5"
 );
 const limit = ref(defaultLimit);
 const { products, fetchProducts } = useProductApi();
-const { addToCart, addExtraFields } = useCartUtils();
+const { addToCart, initExtraFieldInjection } = useCartUtils();
 
 const injectWidgetRow = () => {
-  const footer = document.querySelector(".ec-footer");
-  if (!footer || document.getElementById("recent-products-wrapper")) return;
+  const ecCartSection = document.querySelector(".ec-cart");
+  if (!ecCartSection || document.querySelector(".recent-products-widget")) return;
+  
+  const widget = document.createElement("div");
+  widget.className = "recent-products-widget";
 
-  const wrapper = document.createElement("div");
-  wrapper.id = "recent-products-wrapper";
-
-  wrapper.innerHTML = `
-    <div class="recent-products-widget">
-      <h2 class="ec-text-medium">Recently Updated Products</h2>
-      <label class="ec-text">
-        Show last
-        <select id="recent-limit" class="ec-select">
-          ${[3, 5, 8, 10]
-            .map((n) => `<option value="${n}">${n}</option>`)
-            .join("")}
-        </select>
-        products
-      </label>
-      <div id="recent-product-grid" class="product-grid" style="margin-top: 1rem;"></div>
-    </div>
+  widget.innerHTML = `
+    <h2 class="ec-text-medium">Recently Updated Products</h2>
+    <label class="ec-text">
+      Show last
+      <select id="recent-limit" class="ec-select">
+        ${[3, 5, 8, 10]
+          .map((n) => `<option value="${n}">${n}</option>`)
+          .join("")}
+      </select>
+      products
+    </label>
+    <div id="recent-product-grid" class="product-grid" style="margin-top: 1rem;"></div>
   `;
+  
+  ecCartSection.appendChild(widget);
 
-  footer.parentElement?.insertBefore(wrapper, footer);
-
-  const select = wrapper.querySelector("#recent-limit") as HTMLSelectElement;
+  const select = widget.querySelector("#recent-limit") as HTMLSelectElement;
   select.value = limit.value.toString();
   select.addEventListener("change", () => {
     limit.value = parseInt(select.value);
@@ -90,17 +87,18 @@ onMounted(() => {
     localStorage.getItem("ecwid-recently-widget-enabled") !== "false";
   if (!isWidgetEnabled) return;
 
+  
   const interval = setInterval(() => {
     if (window.Ecwid?.OnPageLoaded) {
       clearInterval(interval);
       window.Ecwid.OnPageLoaded.add((page) => {
         if (page.type === "CART" || page.type === "CHECKOUT") {
-          addExtraFields()
-          if (page.type === "CART") {
+          if(page.type === "CART") {
             fetchProducts(limit.value).then(() => {
               injectWidgetRow();
             });
           }
+          initExtraFieldInjection();
         }
       });
     }

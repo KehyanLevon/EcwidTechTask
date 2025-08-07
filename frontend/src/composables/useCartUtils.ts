@@ -1,8 +1,8 @@
 export function useCartUtils() {
+  const EXTRA_KEY = "recentlyUpdatedProducts";
+
 
   //TODO:
-  // Нужно екнуть extra после последних изменений
-
   //Тут можно уточнить какие поля конкретно нам нужны, чтобы не гонять лишнюю информацию по сети: https://ecwid.d.pr/i/NXtygM
   //NamedArea в Settings.vue не вынесены в компоненты (стоит прочекать и другие Vue файлы на это тоже)
   //В целом, в коде маловато типизации. Стоит добавить её везде, особенно стоит убрать `any`
@@ -11,42 +11,49 @@ export function useCartUtils() {
   //server.js переписать на TypeScript с соотв. типами и интерфейсами
   //Хотелось бы увидеть экспорт товаров через Node.js, чтобы не нагружать браузер
 
-  const EXTRA_KEY = "recentlyUpdatedProducts";
+
 
   const addToCart = (id: number) => {
-  setTimeout(() => {
-    window.Ecwid?.Cart?.addProduct({ id: Number(id) });
-  }, 0);
+    try {
+      window.Ecwid?.Cart?.addProduct(id);
+    } catch (err) {
+      console.error("Error calling addProduct:", err);
+    }
 
-  const current = JSON.parse(localStorage.getItem(EXTRA_KEY) || "[]");
-  if (!current.includes(id)) {
-    current.push(id);
-    localStorage.setItem(EXTRA_KEY, JSON.stringify(current));
-  }
-};
+    const current = JSON.parse(localStorage.getItem(EXTRA_KEY) || "[]");
+    if (!current.includes(id)) {
+      current.push(id);
+      localStorage.setItem(EXTRA_KEY, JSON.stringify(current));
+    }
+  };
 
+  const initExtraFieldInjection = () => {
+    if (!window.Ecwid) return;
 
+    window.Ecwid.OnAPILoaded?.add(() => {
+      window.Ecwid.OnPageLoaded?.add((page) => {
+        if (page.type === "CART" || page.type === "CHECKOUT") {
+          const value = localStorage.getItem(EXTRA_KEY) || "";
 
+          window.ec = window.ec || {};
+          window.ec.order = window.ec.order || {};
+          window.ec.order.extraFields = window.ec.order.extraFields || {};
 
-  const addExtraFields = () => {
-    window.ec = window.ec || {};
-    window.ec.order = window.ec.order || {};
-    window.ec.order.extraFields = window.ec.order.extraFields || {};
+          window.ec.order.extraFields[EXTRA_KEY] = {
+            title: "Recently updated products",
+            type: "text",
+            value,
+            orderDetailsDisplaySection: "shipping_info",
+            showInNotifications: false,
+            showInInvoice: false,
+            required: false,
+          };
 
-    const value = localStorage.getItem(EXTRA_KEY) || "";
+          window.Ecwid?.refreshConfig?.();
+        }
+      });
+    });
+  };
 
-    window.ec.order.extraFields[EXTRA_KEY] = {
-      title: "Recently updated products",
-      type: "text",
-      value,
-      orderDetailsDisplaySection: "shipping_info",
-      showInNotifications: false,
-      showInInvoice: false,
-      required: false,
-    };
-
-    window.Ecwid?.refreshConfig();
-  }
-
-  return { addToCart, addExtraFields };
+  return { addToCart, initExtraFieldInjection };
 }
