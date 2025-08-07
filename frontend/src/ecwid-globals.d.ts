@@ -5,7 +5,10 @@ declare global {
     Ecwid?: {
       OnAPILoaded: { add: (cb: () => void) => void };
       OnPageLoaded: { add: (cb: (page: { type: string }) => void) => void };
-      openPage: (page: string, options?: any) => void;
+      openPage: (
+        page: string,
+        options?: { id?: number; categoryId?: number; [key: string]: unknown }
+      ) => void;
       Cart?: {
         addProduct: (id: number) => void;
       };

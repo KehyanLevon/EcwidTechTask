@@ -12,64 +12,39 @@
     </div>
 
     <div class="settings-page__body">
-      <div class="named-area">
-        <div class="named-area__header">
-          <div class="named-area__titles">
-            <div class="named-area__title">Feature Summary</div>
-          </div>
-          <div class="named-area__description">
-            This widget shows N of the most recently updated products on the
-            cart page. Customers can add them directly to the cart or view
-            product details.
-          </div>
-        </div>
-      </div>
-
-      <div class="named-area">
-        <div class="named-area__header">
-          <div class="named-area__titles">
-            <div class="named-area__title">Widget Settings</div>
-          </div>
-          <div class="named-area__description">
-            Enable or disable the widget and configure how many products to
-            show.
+      <NamedArea
+        title="Feature Summary"
+        description="This widget shows N of the most recently updated products on the
+          cart page. Customers can add them directly to the cart or view
+          product details."
+      />
+      <NamedArea
+        title="Widget Settings"
+        description="Enable or disable the widget and configure how many products to show."
+      >
+        <div class="a-card a-card--normal">
+          <div class="a-card__paddings">
+            <EnableToggle v-model="enabled" />
+            <DefaultCountSelect v-model="defaultCount" :options="[3, 5, 8, 10]" />
           </div>
         </div>
-        <div class="named-area__body">
-          <div class="a-card a-card--normal">
-            <div class="a-card__paddings">
-              <EnableToggle v-model="enabled" />
-              <DefaultCountSelect
-                v-model="defaultCount"
-                :options="[3, 5, 8, 10]"
-              />
-            </div>
+      </NamedArea>
+      <NamedArea
+        title="Export Store Catalog"
+        description="Choose which products to export to an XLSX file."
+      >
+        <div class="a-card a-card--normal">
+          <div class="a-card__paddings">
+            <ProductExportTable :storeId="storeId" :token="token" />
           </div>
         </div>
-      </div>
-
-      <div class="named-area">
-        <div class="named-area__header">
-          <div class="named-area__titles">
-            <div class="named-area__title">Export Store Catalog</div>
-          </div>
-          <div class="named-area__description">
-            Choose which products to export to an XLSX file.
-          </div>
-        </div>
-        <div class="named-area__body">
-          <div class="a-card a-card--normal">
-            <div class="a-card__paddings">
-              <ProductExportTable :storeId="storeId" :token="token" />
-            </div>
-          </div>
-        </div>
-      </div>
+      </NamedArea>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import NamedArea from "../components/settings/NamedArea.vue";
 import EnableToggle from "../components/settings/EnableToggle.vue";
 import DefaultCountSelect from "../components/settings/DefaultCountSelect.vue";
 import ProductExportTable from "../components/settings/ProductExportTable.vue";
@@ -84,8 +59,5 @@ const { enabled, defaultCount } = useSettings();
 <style scoped>
 .settings-page__header {
   margin-top: 50px;
-}
-.named-area__header {
-  margin-top: 20px;
 }
 </style>

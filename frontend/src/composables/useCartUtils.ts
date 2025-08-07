@@ -3,9 +3,9 @@ export function useCartUtils() {
 
 
   //TODO:
-  //Тут можно уточнить какие поля конкретно нам нужны, чтобы не гонять лишнюю информацию по сети: https://ecwid.d.pr/i/NXtygM
-  //NamedArea в Settings.vue не вынесены в компоненты (стоит прочекать и другие Vue файлы на это тоже)
-  //В целом, в коде маловато типизации. Стоит добавить её везде, особенно стоит убрать `any`
+  //DONE - Тут можно уточнить какие поля конкретно нам нужны, чтобы не гонять лишнюю информацию по сети: https://ecwid.d.pr/i/NXtygM
+  //DONE - NamedArea в Settings.vue не вынесены в компоненты (стоит прочекать и другие Vue файлы на это тоже)
+  //DONE - В целом, в коде маловато типизации. Стоит добавить её везде, особенно стоит убрать `any`
   //Стоит улучшить дизайн списка, чекбоксов и дропдауна с помощью соответствующих компонентов Ecwid CSS Framework: https://ecwid.d.pr/i/g7NFZ0 у списка так же стоит добавить пагинацию
   //Есть проблемы с мобилкой: https://ecwid.d.pr/i/gEO7OP
   //server.js переписать на TypeScript с соотв. типами и интерфейсами
@@ -31,7 +31,7 @@ export function useCartUtils() {
     if (!window.Ecwid) return;
 
     window.Ecwid.OnAPILoaded?.add(() => {
-      window.Ecwid.OnPageLoaded?.add((page) => {
+      window.Ecwid?.OnPageLoaded?.add((page) => {
         if (page.type === "CART" || page.type === "CHECKOUT") {
           const value = localStorage.getItem(EXTRA_KEY) || "";
 
