@@ -69,13 +69,28 @@ form button:hover {
     margin-bottom: 1rem;
 }
 
+.hero-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
 .hero-buttons a {
-    padding: 0.75rem 1.5rem;
-    margin-right: 1rem;
-    text-decoration: none;
-    color: #fff;
-    background: #000;
-    border-radius: 4px;
+  padding: 0.75rem 1.5rem;
+  text-decoration: none;
+  color: #fff;
+  background: #000;
+  border-radius: 4px;
+  white-space: nowrap;
+  transition: background-color 0.3s, color 0.3s;
+  border: 1px solid white;
+}
+
+.hero-buttons a:hover {
+  background-color: #fff;
+  color: #000;
+  border: 1px solid #000;
 }
 
 .reviews {
@@ -136,4 +151,71 @@ footer {
 
 .featured {
     margin-top: 2vh;
+}
+
+.why-choose {
+  padding: 3rem 1rem;
+  text-align: center;
+  background: #f9f9f9;
+}
+
+.benefits {
+  display: flex;
+  justify-content: space-around;
+  flex-wrap: wrap;
+  gap: 2rem;
+  margin-top: 2rem;
+}
+
+.benefit {
+  max-width: 300px;
+}
+
+.benefit img {
+  width: 18vw;
+  height: auto;
+  margin-bottom: 1rem;
+  border-radius: 8px;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.insta-collage {
+  padding: 3rem 1rem;
+  background-color: #fdfdfd;
+  text-align: center;
+}
+
+.insta-collage h2 {
+  font-size: 2rem;
+  margin-bottom: 2rem;
+}
+
+.collage-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-auto-rows: 200px;
+  gap: 1rem;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.collage-grid img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 8px;
+  transition: transform 0.3s ease;
+}
+
+.collage-grid img:hover, .benefit img:hover {
+  transform: scale(1.03);
+}
+
+.collage-grid .wide {
+  grid-column: span 2;
+}
+
+.collage-grid .tall {
+  grid-row: span 2;
 }

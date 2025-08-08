@@ -12,23 +12,25 @@ const { products, fetchProducts } = useProductApi();
 const { addToCart, initExtraFieldInjection } = useCartUtils();
 
 const injectWidgetRow = () => {
-  const ecCartSection = document.querySelector(".ec-cart");
+  const ecCartSection = document.querySelector(".ec-cart");  
   if (!ecCartSection || document.querySelector(".recent-products-widget")) return;
   
   const widget = document.createElement("div");
   widget.className = "recent-products-widget";
 
   widget.innerHTML = `
-    <h2 class="ec-text-medium">Recently Updated Products</h2>
-    <label class="ec-text">
-      Show last
-      <select id="recent-limit" class="ec-select">
-        ${[3, 5, 8, 10]
-          .map((n) => `<option value="${n}">${n}</option>`)
-          .join("")}
-      </select>
-      products
-    </label>
+    <div class="widget-header">
+      <h2 class="ec-text-medium">Recently Updated Products</h2>
+      <label class="ec-text">
+        Show last
+        <select id="recent-limit" class="ec-select">
+          ${[3, 5, 8, 10]
+            .map((n) => `<option value="${n}">${n}</option>`)
+            .join("")}
+        </select>
+        products
+      </label>
+    </div>
     <div id="recent-product-grid" class="product-grid" style="margin-top: 1rem;"></div>
   `;
   
@@ -88,15 +90,31 @@ onMounted(() => {
   if (!isWidgetEnabled) return;
 
   
-  const interval = setInterval(() => {
-    if (window.Ecwid?.OnPageLoaded) {
+  const interval = setInterval(() => {    
+    if (window.Ecwid?.OnPageLoaded && document.querySelector(".ec-cart")) {
       clearInterval(interval);
-      window.Ecwid.OnPageLoaded.add((page) => {
-        if (page.type === "CART" || page.type === "CHECKOUT") {
-          if(page.type === "CART") {
+      window.Ecwid.OnCartChanged.add(()=>{
+        setTimeout(()=>{
+          const ecCart = document.querySelector(".ec-cart");
+          const widget = document.querySelector(".recent-products-widget");
+          if(widget && !ecCart?.querySelector(".recent-products-widget")) {
+            widget.remove();
+          }
+          if(!widget) {
             fetchProducts(limit.value).then(() => {
               injectWidgetRow();
             });
+          }
+        }, 100)
+      })
+      window.Ecwid.OnPageLoaded.add((page) => {
+        if (page.type === "CART" || page.type === "CHECKOUT") {
+          if(page.type === "CART") {
+            if(!document.querySelector(".recent-products-widget")) {
+              fetchProducts(limit.value).then(() => {
+                injectWidgetRow();
+              });
+            }
           }
           initExtraFieldInjection();
         }

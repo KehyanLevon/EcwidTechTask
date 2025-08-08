@@ -1,16 +1,18 @@
 <template>
-  <label for="defaultCount" class="ec-label">
-    Number of products shown by default:
-    <select id="defaultCount" v-model="modelValue" class="ec-select">
-      <option v-for="n in options" :key="n" :value="n">{{ n }}</option>
-    </select>
-  </label>
+  <EcwidSelect
+    id="defaultCount"
+    label="Number of products shown by default"
+    :options="[3, 5, 8, 10]"
+    v-model="modelValue"
+  />
 </template>
 
 <script setup lang="ts">
+import EcwidSelect from "../ecwid/EcwidSelect.vue";
+
 defineProps<{
-  options: number[];
+  options: (number | 'all')[];
 }>();
 
-const modelValue = defineModel<number>();
+const modelValue = defineModel<number | 'all'>();
 </script>

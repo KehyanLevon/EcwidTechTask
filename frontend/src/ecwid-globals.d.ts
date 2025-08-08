@@ -2,9 +2,11 @@ export {};
 
 declare global {
   interface Window {
+    xProductBrowser?: (...args: string[]) => void;
     Ecwid?: {
       OnAPILoaded: { add: (cb: () => void) => void };
       OnPageLoaded: { add: (cb: (page: { type: string }) => void) => void };
+      OnCartChanged: { add: (cb: () => void) => void }; // ← ✨ ДОБАВЬ ЭТО
       openPage: (
         page: string,
         options?: { id?: number; categoryId?: number; [key: string]: unknown }

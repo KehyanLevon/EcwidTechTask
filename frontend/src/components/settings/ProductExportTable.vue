@@ -3,22 +3,20 @@
     <div v-if="products.length === 0">Loading products...</div>
 
     <div v-else>
-      <label class="ec-label" style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
-        Show
-        <select v-model="itemsPerPage" class="ec-select">
-          <option v-for="n in [5, 10, 15]" :key="n" :value="n">{{ n }}</option>
-          <option value="all">All</option>
-        </select>
-        items per page
-      </label>
+      <EcwidSelect
+        id="itemsPerPage"
+        label="Items per page"
+        :options="[5, 10, 15, 'all']"
+        v-model="itemsPerPage"
+      />
 
-      <table class="ec-table">
+
+      <table class="ec-pika-table">
         <thead>
           <tr>
             <th>
-              <label class="ec-checkbox">
-                <input type="checkbox" v-model="selectAll" @change="toggleAll" />
-                <span class="ec-checkbox__icon"></span>
+              <label>
+                <EcwidCheckbox v-model="selectAll" @change="toggleAll" />
               </label>
             </th>
             <th>Name</th>
@@ -29,9 +27,14 @@
         <tbody>
           <tr v-for="product in paginatedProducts" :key="product.id">
             <td>
-              <label class="ec-checkbox">
-                <input type="checkbox" v-model="selected" :value="product" />
-                <span class="ec-checkbox__icon"></span>
+              <label>
+                <EcwidCheckbox
+                  :modelValue="selected.includes(product)"
+                  @update:modelValue="checked => {
+                    if (checked) selected.push(product);
+                    else selected.splice(selected.indexOf(product), 1);
+                  }"
+                />
               </label>
             </td>
             <td>{{ product.name }}</td>
@@ -41,7 +44,7 @@
         </tbody>
       </table>
 
-      <div v-if="itemsPerPage !== 'all'" class="ec-pagination" style="margin-top: 1rem; display: flex; align-items: center; gap: 12px;">
+      <div v-if="totalPages > 1" class="ec-pagination" style="margin-top: 1rem; display: flex; align-items: center; gap: 12px;">
         <button
           class="btn"
           :disabled="currentPage === 1"
@@ -60,7 +63,7 @@
       </div>
 
       <button
-        class="ec-btn ec-btn--primary"
+        class="btn btn-primary btn-medium"
         style="margin-top: 1rem"
         @click="exportSelected"
       >
@@ -75,6 +78,8 @@ import { ref, computed, onMounted } from "vue";
 import { utils, writeFile } from "xlsx";
 import type { ProductCardData  } from "../../types/ecwid";
 import { useProductApi } from "../../composables/useProductApi";
+import EcwidSelect from "../ecwid/EcwidSelect.vue";
+import EcwidCheckbox from "../ecwid/EcwidCheckbox.vue";
 
 const { products, fetchProducts } = useProductApi();
 
@@ -137,3 +142,15 @@ onMounted(() => {
 });
 
 </script>
+
+<style>
+.ec-pika-table td {
+  text-align: center;
+}
+tr {
+  height: 6vh;
+}
+.ec-pagination {
+  justify-content: center;
+}
+</style>

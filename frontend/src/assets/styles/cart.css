@@ -19,6 +19,10 @@
   padding: 0.25rem;
 }
 
+.widget-header {
+  text-align: left;
+}
+
 .product-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
@@ -98,4 +102,8 @@
 
 .ec-cart {
   flex-wrap:wrap
+}
+
+.ecwid-productBrowser-innerTable {
+  display: none !important;
 }
