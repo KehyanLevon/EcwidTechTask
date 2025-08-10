@@ -105,7 +105,7 @@ onMounted(() => {
               injectWidgetRow();
             });
           }
-        }, 100)
+        }, 300)
       })
       window.Ecwid.OnPageLoaded.add((page) => {
         if (page.type === "CART" || page.type === "CHECKOUT") {
