@@ -107,3 +107,7 @@
 .ecwid-productBrowser-innerTable {
   display: none !important;
 }
+
+.ec-cart--empty {
+  max-width: unset !important;
+}

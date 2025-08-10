@@ -1,18 +1,5 @@
 export function useCartUtils() {
   const EXTRA_KEY = "recentlyUpdatedProducts";
-
-
-  // TODO:
-  // DONE - Тут можно уточнить какие поля конкретно нам нужны, чтобы не гонять лишнюю информацию по сети: https://ecwid.d.pr/i/NXtygM
-  // DONE - NamedArea в Settings.vue не вынесены в компоненты (стоит прочекать и другие Vue файлы на это тоже)
-  // DONE - В целом, в коде маловато типизации. Стоит добавить её везде, особенно стоит убрать `any`
-  // DONE - Стоит улучшить дизайн списка, чекбоксов и дропдауна с помощью соответствующих компонентов Ecwid CSS Framework: https://ecwid.d.pr/i/g7NFZ0 у списка так же стоит добавить пагинацию
-  // DONE - Есть проблемы с мобилкой: https://ecwid.d.pr/i/gEO7OP
-  // DONE - server.js переписать на TypeScript с соотв. типами и интерфейсами
-  // DONE - Хотелось бы увидеть экспорт товаров через Node.js, чтобы не нагружать браузер
-
-
-
   const addToCart = (id: number) => {
     try {
       window.Ecwid?.Cart?.addProduct(id);
