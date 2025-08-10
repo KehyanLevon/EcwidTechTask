@@ -3,10 +3,6 @@ import type { EcwidProduct, ProductCardData } from "../types/ecwid";
 
 export function useProductApi() {
   const products = ref<ProductCardData[]>([]);
-
-
-
-
   const fetchProducts = async (limit: number = 0) => {
     try {
       const storeId = import.meta.env.VITE_ECWID_STORE_ID;

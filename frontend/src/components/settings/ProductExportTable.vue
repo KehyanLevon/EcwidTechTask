@@ -9,14 +9,12 @@
         :options="[5, 10, 15, 'all']"
         v-model="itemsPerPage"
       />
-
-
       <table class="ec-pika-table">
         <thead>
           <tr>
             <th>
               <label>
-                <EcwidCheckbox v-model="selectAll" @change="toggleAll" />
+                <EcwidCheckbox v-model="selectAll" @change="toggleAll" title="Choose all" />
               </label>
             </th>
             <th>Name</th>
@@ -75,7 +73,6 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from "vue";
-import { utils, writeFile } from "xlsx";
 import type { ProductCardData  } from "../../types/ecwid";
 import { useProductApi } from "../../composables/useProductApi";
 import EcwidSelect from "../ecwid/EcwidSelect.vue";
@@ -115,25 +112,38 @@ const toggleAll = () => {
   }
 };
 
-const exportSelected = () => {
+const exportSelected = async () => {
   if (selected.value.length === 0) {
     alert("No products selected");
     return;
   }
 
-  const ws = utils.json_to_sheet(
-    selected.value.map((p) => ({
-      ID: p.id,
-      Name: p.name,
-      Price: p.price,
-      SKU: p.sku,
-    }))
-  );
+  const response = await fetch("/api/export", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      products: selected.value,
+    }),
+  });
 
-  const wb = utils.book_new();
-  utils.book_append_sheet(wb, ws, "Products");
-  writeFile(wb, "selected-products.xlsx");
+  if (!response.ok) {
+    alert("Export failed");
+    return;
+  }
+
+  const blob = await response.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "selected-products.xlsx";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
 };
+
 
 onMounted(() => {
   if (products.value.length === 0) {
