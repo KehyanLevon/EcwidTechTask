@@ -1,5 +1,5 @@
 <template>
-  <CartWrapper />
+  <CartWrapper class="cart-wrapper"/>
   <RecentlyUpdatedWidget />
 </template>
 

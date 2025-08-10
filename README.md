@@ -34,10 +34,9 @@ json
 
 ## Landing Page
 
-The landing page (`/`) simulates a real store:
+The landing page (`/`) simulates a real store simple landing page:
 
 - ✅ Custom branding and layout
-- ✅ Embedded Ecwid product browser
 - ✅ Customer reviews (fetched from `/api/reviews`)
 - ✅ Newsletter subscription section(not working)
 
@@ -47,9 +46,10 @@ The landing page (`/`) simulates a real store:
 
 ### 1. Create `.env` file
 
-Create a `.env` file at the root by copying the example:
+Create a `.env` file at ./frontend by copying the example:
 
 ```bash
+cd .\frontend\
 cp .env-example .env
 ```
 

@@ -1,59 +1,48 @@
-<template>
-  <div id="recently-updated-products-widget"></div>
-</template>
+<template></template>
 
 <script setup lang="ts">
 import { ref, onMounted, watch } from "vue";
 import { useProductApi } from "../../composables/useProductApi";
 import { useCartUtils } from "../../composables/useCartUtils";
-
 const defaultLimit = parseInt(
   localStorage.getItem("ecwid-recently-widget-default-count") || "5"
 );
 const limit = ref(defaultLimit);
 const { products, fetchProducts } = useProductApi();
-const { addToCart } = useCartUtils();
+const { addToCart, initExtraFieldInjection } = useCartUtils();
 
 const injectWidgetRow = () => {
-  const interval = setInterval(() => {
-    const container = document.querySelector(
-      "#recently-updated-products-widget"
-    );
-    if (!container) return;
-    if (document.getElementById("recent-products-wrapper")) {
-      clearInterval(interval);
-      return;
-    }
+  const ecCartSection = document.querySelector(".ec-cart");  
+  if (!ecCartSection || document.querySelector(".recent-products-widget")) return;
+  
+  const widget = document.createElement("div");
+  widget.className = "recent-products-widget";
 
-    const widget = document.createElement("div");
-    widget.id = "recent-products-wrapper";
-    widget.innerHTML = `
-      <div class="recent-products-widget">
-        <h2>Recently Updated Products</h2>
-        <label>
-          Show last
-          <select id="recent-limit">
-            ${[3, 5, 8, 10]
-              .map((n) => `<option value="${n}">${n}</option>`)
-              .join("")}
-          </select>
-          products
-        </label>
-        <div id="recent-product-grid" class="product-grid" style="margin-top: 1rem;"></div>
-      </div>
-    `;
+  widget.innerHTML = `
+    <div class="widget-header">
+      <h2 class="ec-text-medium">Recently Updated Products</h2>
+      <label class="ec-text">
+        Show last
+        <select id="recent-limit" class="ec-select">
+          ${[3, 5, 8, 10]
+            .map((n) => `<option value="${n}">${n}</option>`)
+            .join("")}
+        </select>
+        products
+      </label>
+    </div>
+    <div id="recent-product-grid" class="product-grid" style="margin-top: 1rem;"></div>
+  `;
+  
+  ecCartSection.appendChild(widget);
 
-    container.appendChild(widget);
-    clearInterval(interval);
+  const select = widget.querySelector("#recent-limit") as HTMLSelectElement;
+  select.value = limit.value.toString();
+  select.addEventListener("change", () => {
+    limit.value = parseInt(select.value);
+  });
 
-    const select = widget.querySelector("#recent-limit") as HTMLSelectElement;
-    select.value = limit.value.toString();
-    select.addEventListener("change", () => {
-      limit.value = parseInt(select.value);
-    });
-
-    renderProductCards();
-  }, 200);
+  renderProductCards();
 };
 
 const renderProductCards = () => {
@@ -62,15 +51,13 @@ const renderProductCards = () => {
 
   grid.innerHTML = products.value
     .map((p) => {
-      const cleanName = encodeURIComponent(p.name.replace(/\s+/g, "-"));
-      const href = `/product/${p.id}#!/${cleanName}/p/${p.id}`;
       return `
         <div class="product-card">
-          <a href="${href}">
-            <img src="${p.imageUrl}" alt="${p.name}" data-id="${p.id}" class="product-link" />
+          <a href="#" data-id="${p.id}" class="product-link">
+            <img src="${p.imageUrl}" alt="${p.name}" class="product-link" />
           </a>
-          <a href="${href}">
-            <h3 class="product-link" data-id="${p.id}">${p.name}</h3>
+          <a href="#" data-id="${p.id}" class="product-link">
+            <h3 class="product-link">${p.name}</h3>
           </a>
           <p>${p.price}</p>
           <button data-id="${p.id}" id="buy-now">Buy now</button>
@@ -78,6 +65,16 @@ const renderProductCards = () => {
       `;
     })
     .join("");
+
+  grid.querySelectorAll(".product-link").forEach((el) => {
+    el.addEventListener("click", (e) => {
+      e.preventDefault();
+      const id = (el as HTMLElement).dataset.id;
+      if (id) {
+        window.Ecwid?.openPage("product", { id: Number(id) });
+      }
+    });
+  });
 
   grid.querySelectorAll("button").forEach((btn) => {
     btn.addEventListener("click", () => {
@@ -90,11 +87,48 @@ const renderProductCards = () => {
 onMounted(() => {
   const isWidgetEnabled =
     localStorage.getItem("ecwid-recently-widget-enabled") !== "false";
-  if (isWidgetEnabled) {
-    setTimeout(() => injectWidgetRow(), 600);
-    fetchProducts(limit.value);
-  }
+  if (!isWidgetEnabled) return;
+  
+  const interval = setInterval(() => {
+    if (window.Ecwid?.OnPageLoaded && document.querySelector(".ec-cart")) {
+      clearInterval(interval);
+      window.Ecwid.OnCartChanged.add(()=>{
+        setTimeout(()=>{
+          const ecCart = document.querySelector(".ec-cart");
+          let widget = document.querySelector(".recent-products-widget");
+          if(ecCart) {
+            // if widget exist but not inside ec-cart recreate widget
+            if(widget && !ecCart.querySelector(".recent-products-widget")) {
+              console.log("OnCartChanged: removed")
+              widget.remove();
+            }
+            widget = document.querySelector(".recent-products-widget");
+            if(!widget) {
+              fetchProducts(limit.value).then(() => {
+                console.log("OnCartChanged: created")
+                injectWidgetRow();
+              });
+            }
+          }
+        }, 200)
+      })
+      window.Ecwid.OnPageLoaded.add((page) => {
+        if (page.type === "CART" || page.type === "CHECKOUT") {
+          if(page.type === "CART") {
+            if(!document.querySelector(".recent-products-widget")) {
+              fetchProducts(limit.value).then(() => {
+                console.log("OnPageLoaded: created")
+                injectWidgetRow();
+              });
+            }
+          }
+          initExtraFieldInjection();
+        }
+      });
+    }
+  }, 200);
 });
+
 
 watch(limit, async () => {
   await fetchProducts(limit.value);
