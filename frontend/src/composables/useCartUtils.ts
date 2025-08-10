@@ -27,7 +27,7 @@ export function useCartUtils() {
     }
   };
 
-  const initExtraFieldInjection = () => {
+  const initExtraFieldInjection = () => {    
     const value = localStorage.getItem(EXTRA_KEY) || "";
 
     window.ec = window.ec || {};

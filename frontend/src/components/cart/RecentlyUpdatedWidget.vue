@@ -88,30 +88,36 @@ onMounted(() => {
   const isWidgetEnabled =
     localStorage.getItem("ecwid-recently-widget-enabled") !== "false";
   if (!isWidgetEnabled) return;
-
   
-  const interval = setInterval(() => {    
+  const interval = setInterval(() => {
     if (window.Ecwid?.OnPageLoaded && document.querySelector(".ec-cart")) {
       clearInterval(interval);
       window.Ecwid.OnCartChanged.add(()=>{
         setTimeout(()=>{
           const ecCart = document.querySelector(".ec-cart");
-          const widget = document.querySelector(".recent-products-widget");
-          if(widget && !ecCart?.querySelector(".recent-products-widget")) {
-            widget.remove();
+          let widget = document.querySelector(".recent-products-widget");
+          if(ecCart) {
+            // if widget exist but not inside ec-cart recreate widget
+            if(widget && !ecCart.querySelector(".recent-products-widget")) {
+              console.log("OnCartChanged: removed")
+              widget.remove();
+            }
+            widget = document.querySelector(".recent-products-widget");
+            if(!widget) {
+              fetchProducts(limit.value).then(() => {
+                console.log("OnCartChanged: created")
+                injectWidgetRow();
+              });
+            }
           }
-          if(!widget) {
-            fetchProducts(limit.value).then(() => {
-              injectWidgetRow();
-            });
-          }
-        }, 300)
+        }, 200)
       })
       window.Ecwid.OnPageLoaded.add((page) => {
         if (page.type === "CART" || page.type === "CHECKOUT") {
           if(page.type === "CART") {
             if(!document.querySelector(".recent-products-widget")) {
               fetchProducts(limit.value).then(() => {
+                console.log("OnPageLoaded: created")
                 injectWidgetRow();
               });
             }
